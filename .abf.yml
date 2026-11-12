@@ -1,0 +1,9 @@
+sources:
+  asciidoctorj-3.0.1.tar.gz: 2b8b0e5341d3dc5d7b6f7c1474b58aa412ceee1d
+  asciidoctor-2.0.26.tar.gz: 456cbdab11a0354267fe5b22269ee05b13c1cdec
+  stringio-3.1.5.tar.gz: 530a7d8b92168ed95458b942c7ca424183c25b76
+  strscan-3.1.5.tar.gz: 18acd8368c1d5e79b05c1694192b2bdee8a49d4d
+  cgi-0.3.7.tar.gz: fcde546496c15f6f7f355dde9c8683f4361a641a
+  uri-0.12.4.tar.gz: 03fd006a7e98be094bcb4bfcaae701013ba41da1
+  logger-1.5.1.tar.gz: 2a87f0a68c06efdc1d0326c877b09f8973715193
+  optparse-0.2.0.tar.gz: f4724925887590c98f17ffce2f2eefedb308dde4
