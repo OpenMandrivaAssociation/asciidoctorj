@@ -51,6 +51,8 @@ BuildRequires:	mvn(org.crac:crac)
 BuildRequires:	mvn(org.apache.ant:ant)
 BuildRequires:	mvn(org.osgi:org.osgi.core)
 BuildRequires:	mvn(org.slf4j:slf4j-api)
+# rpmbuild -bs runs before BuildRequires install sysjar.
+%{!?_sysjar_java_requires:%global _sysjar_java_requires java-current}
 Requires:	%{_sysjar_java_requires}
 
 %description
