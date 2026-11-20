@@ -1,6 +1,6 @@
 Name:		asciidoctorj
 Version:	3.0.1
-Release:	1
+Release:	2
 Summary:	AsciidoctorJ implementation used by Gradle's documentation build
 Group:		Development/Java
 License:	Apache-2.0 AND MIT AND BSD-2-Clause
@@ -9,23 +9,23 @@ URL:		https://github.com/asciidoctor/asciidoctorj
 Source0:	asciidoctorj-%{version}.tar.gz
 # Asciidoctor 2.0.26 Ruby library. Tag v2.0.26. test/fixtures/assets.jar is removed.
 Source1:	asciidoctor-2.0.26.tar.gz
-# JRuby 9.4.14.0 default gems named by that tag's lib/pom.xml. The engine
+# JRuby 10.1.3.0 default gems named by that tag's lib/pom.xml. The engine
 # jar does not ship them. stringio and strscan are the JRuby Java extensions.
-# cgi, uri, logger, and optparse are the Ruby files a standalone convert loads.
+# uri, logger, and optparse are the Ruby files a standalone convert loads.
+# cgi stays the copy inside jruby.jar: vendoring the gem would shadow it.
 # C extensions in these tags are not compiled.
-Source2:	stringio-3.1.5.tar.gz
-Source3:	strscan-3.1.5.tar.gz
-Source4:	cgi-0.3.7.tar.gz
-Source5:	uri-0.12.4.tar.gz
-Source6:	logger-1.5.1.tar.gz
-Source7:	optparse-0.2.0.tar.gz
+Source2:	stringio-3.2.0.tar.gz
+Source3:	strscan-3.1.8.tar.gz
+Source4:	uri-1.1.2.tar.gz
+Source5:	logger-1.7.0.tar.gz
+Source6:	optparse-0.8.1.tar.gz
 
 BuildArch:	noarch
 BuildRequires:	java-current-devel
 BuildRequires:	sysjar
 BuildRequires:	javapackages-filesystem
 BuildRequires:	mvn(org.asciidoctor:asciidoctorj-api) = 3.0.1
-BuildRequires:	mvn(org.jruby:jruby) = 9.4.14.0
+BuildRequires:	mvn(org.jruby:jruby) = 10.1.3.0
 BuildRequires:	mvn(org.ow2.asm:asm)
 BuildRequires:	mvn(org.ow2.asm:asm-commons)
 BuildRequires:	mvn(org.ow2.asm:asm-tree)
@@ -36,7 +36,6 @@ BuildRequires:	mvn(com.github.jnr:jnr-unixsocket)
 BuildRequires:	mvn(com.github.jnr:jnr-posix)
 BuildRequires:	mvn(com.github.jnr:jnr-constants)
 BuildRequires:	mvn(com.github.jnr:jnr-ffi)
-BuildRequires:	mvn(com.github.jnr:jnr-a64asm)
 BuildRequires:	mvn(com.github.jnr:jffi)
 BuildRequires:	mvn(org.jruby.joni:joni)
 BuildRequires:	mvn(org.jruby.jcodings:jcodings)
@@ -48,22 +47,24 @@ BuildRequires:	mvn(joda-time:joda-time)
 BuildRequires:	mvn(me.qmx.jitescript:jitescript)
 BuildRequires:	mvn(com.headius:backport9)
 BuildRequires:	mvn(org.crac:crac)
-BuildRequires:	mvn(org.apache.ant:ant)
-BuildRequires:	mvn(org.osgi:org.osgi.core)
-BuildRequires:	mvn(org.slf4j:slf4j-api)
+BuildRequires:	mvn(ch.randelshofer:fastdoubleparser)
 # rpmbuild -bs runs before BuildRequires install sysjar.
 %{!?_sysjar_java_requires:%global _sysjar_java_requires java-current}
 Requires:	%{_sysjar_java_requires}
+# A command-line define wins when the installed jar is older than this build.
+%{!?jruby_jar:%global jruby_jar %{_javadir}/jruby.jar}
+%{!?dirgra_jar:%global dirgra_jar %{_javadir}/dirgra.jar}
+%{!?invokebinder_jar:%global invokebinder_jar %{_javadir}/invokebinder.jar}
 
 %description
 AsciidoctorJ 3.0.1 is the Java implementation of org.asciidoctor:asciidoctorj.
 Gradle 9.9.1's catalog names this coordinate. The jar is the core Java
-sources, the Asciidoctor 2.0.26 library, and the JRuby default gems a
-standalone HTML convert loads: stringio 3.1.5, strscan 3.1.5, cgi 0.3.7,
-uri 0.12.4, logger 1.5.1, and optparse 0.2.0. Syntax-highlighter and
-template gems are not included. package-info.java imports the OSGi Export
-annotation, which cooker does not ship, so the build compiles a
-CLASS-retention stub and leaves that stub out of the jar.
+sources, the Asciidoctor 2.0.26 library, and the JRuby 10 default gems a
+standalone HTML convert loads: stringio 3.2.0, strscan 3.1.8, uri 1.1.2,
+logger 1.7.0, and optparse 0.8.1. cgi comes from jruby.jar.
+Syntax-highlighter and template gems are not included. package-info.java
+imports the OSGi Export annotation, which cooker does not ship, so the
+build compiles a CLASS-retention stub and leaves that stub out of the jar.
 
 %prep
 %setup -q -n asciidoctorj-%{version}
@@ -73,14 +74,12 @@ tar -xf %{SOURCE3}
 tar -xf %{SOURCE4}
 tar -xf %{SOURCE5}
 tar -xf %{SOURCE6}
-tar -xf %{SOURCE7}
 cp -f asciidoctor-2.0.26/LICENSE LICENSE-asciidoctor.txt
-cp -f stringio-3.1.5/LICENSE.txt LICENSE-stringio.txt
-cp -f strscan-3.1.5/LICENSE.txt LICENSE-strscan.txt
-cp -f cgi-0.3.7/LICENSE.txt LICENSE-cgi.txt
-cp -f uri-0.12.4/LICENSE.txt LICENSE-uri.txt
-cp -f logger-1.5.1/LICENSE.txt LICENSE-logger.txt
-cp -f optparse-0.2.0/COPYING LICENSE-optparse.txt
+cp -f stringio-3.2.0/LICENSE.txt LICENSE-stringio.txt
+cp -f strscan-3.1.8/LICENSE.txt LICENSE-strscan.txt
+cp -f uri-1.1.2/COPYING LICENSE-uri.txt
+cp -f logger-1.7.0/COPYING LICENSE-logger.txt
+cp -f optparse-0.8.1/COPYING LICENSE-optparse.txt
 if find . -type f \( -name '*.jar' -o -name '*.class' -o -name '*.so' -o -name '*.node' -o -name '*.wasm' \) | grep -q .; then
 	echo 'prebuilt binaries remain' >&2
 	find . -type f \( -name '*.jar' -o -name '*.class' -o -name '*.so' -o -name '*.node' -o -name '*.wasm' \)
@@ -103,23 +102,20 @@ cat > depjars.list << EOF
 %{_javadir}/jnr-posix.jar
 %{_javadir}/jnr-constants.jar
 %{_javadir}/jnr-ffi.jar
-%{_javadir}/jnr-a64asm.jar
 %{_javadir}/jffi.jar
 %{_javadir}/joni.jar
 %{_javadir}/jcodings.jar
-%{_javadir}/dirgra.jar
-%{_javadir}/invokebinder.jar
+%{dirgra_jar}
+%{invokebinder_jar}
 %{_javadir}/options.jar
 %{_javadir}/jzlib.jar
 %{_javadir}/joda-time.jar
 %{_javadir}/jitescript.jar
 %{_javadir}/backport9.jar
 %{_javadir}/crac.jar
-%{_javadir}/ant.jar
-%{_javadir}/org.osgi.core.jar
-%{_javadir}/slf4j-api.jar
+%{_javadir}/fastdoubleparser.jar
 EOF
-CP=%{_javadir}/jruby.jar:%{_javadir}/asciidoctorj-api.jar
+CP=%{jruby_jar}:%{_javadir}/asciidoctorj-api.jar
 while IFS= read -r jar; do
 	test -s "$jar"
 	CP="$CP:$jar"
@@ -138,12 +134,11 @@ public @interface Export {}
 EOF
 javac --release 11 -encoding UTF-8 -Xlint:-options -d stubclasses stub/org/osgi/annotation/bundle/Export.java
 
-find stringio-3.1.5/ext/java strscan-3.1.5/ext/jruby cgi-0.3.7/ext/java -name '*.java' > ext.list
-test "$(wc -l < ext.list)" -eq 5
+find stringio-3.2.0/ext/java strscan-3.1.8/ext/jruby -name '*.java' > ext.list
+test "$(wc -l < ext.list)" -eq 4
 javac --release 11 -encoding UTF-8 -Xlint:-options -cp "$CP" -d classes @ext.list
 test -s classes/org/jruby/ext/stringio/StringIOLibrary.class
 test -s classes/org/jruby/ext/strscan/StringScannerLibrary.class
-test -s classes/org/jruby/ext/cgi/escape/CGIEscape.class
 
 find asciidoctorj-core/src/main/java -name '*.java' > java.list
 test "$(wc -l < java.list)" -eq 77
@@ -155,22 +150,18 @@ if find classes -name 'Export.class' | grep -q .; then
 fi
 
 cp -a asciidoctorj-core/src/main/resources/. classes/
-mkdir -p classes/gems/asciidoctor-2.0.26 classes/specifications classes/cgi classes/strscan
+mkdir -p classes/gems/asciidoctor-2.0.26 classes/specifications classes/strscan
 cp -a asciidoctor-2.0.26/lib asciidoctor-2.0.26/data classes/gems/asciidoctor-2.0.26/
-cp -a uri-0.12.4/lib/. classes/
-cp -a logger-1.5.1/lib/. classes/
-cp -a optparse-0.2.0/lib/. classes/
-cp -f cgi-0.3.7/lib/cgi/util.rb classes/cgi/util.rb
-cp -f strscan-3.1.5/lib/strscan/strscan.rb classes/strscan/strscan.rb
+cp -a uri-1.1.2/lib/. classes/
+cp -a logger-1.7.0/lib/. classes/
+cp -a optparse-0.8.1/lib/. classes/
+cp -f strscan-3.1.8/lib/strscan/strscan.rb classes/strscan/strscan.rb
 cat > classes/stringio.rb << 'EOF'
 JRuby::Util.load_ext("org.jruby.ext.stringio.StringIOLibrary")
 EOF
 cat > classes/strscan.rb << 'EOF'
 JRuby::Util.load_ext("org.jruby.ext.strscan.StringScannerLibrary")
 require "strscan/strscan"
-EOF
-cat > classes/cgi/escape.rb << 'EOF'
-JRuby::Util.load_ext("org.jruby.ext.cgi.escape.CGIEscape")
 EOF
 cat > classes/specifications/asciidoctor-2.0.26.gemspec << 'EOF'
 Gem::Specification.new do |s|
@@ -189,8 +180,11 @@ test -s classes/gems/asciidoctor-2.0.26/data/stylesheets/asciidoctor-default.css
 test -s classes/logger.rb
 test -s classes/optparse.rb
 test -s classes/uri.rb
-test -s classes/cgi/util.rb
 test -s classes/strscan/strscan.rb
+if find classes -path '*/cgi/*' -o -name 'CGIEscape.class' | grep -q .; then
+	echo 'cgi gem shadowed jruby' >&2
+	exit 1
+fi
 if grep -F -q 'stringio.jar' classes/stringio.rb; then
 	echo 'stringio loader still asks for a jar' >&2
 	exit 1
@@ -243,7 +237,7 @@ cat > asciidoctorj.pom << 'EOF'
     <dependency>
       <groupId>org.jruby</groupId>
       <artifactId>jruby</artifactId>
-      <version>9.4.14.0</version>
+      <version>10.1.3.0</version>
     </dependency>
   </dependencies>
 </project>
@@ -267,7 +261,7 @@ export JAVA_HOME=%{_jvmdir}/java-openjdk
 export PATH="$JAVA_HOME/bin:$PATH"
 JAR=%{buildroot}%{_javadir}/asciidoctorj.jar
 test -s "$JAR"
-CP="$JAR:%{_javadir}/asciidoctorj-api.jar:%{_javadir}/jruby.jar"
+CP="$JAR:%{_javadir}/asciidoctorj-api.jar:%{jruby_jar}"
 while IFS= read -r dep; do
 	test -s "$dep"
 	CP="$CP:$dep"
@@ -310,4 +304,4 @@ grep -F -qx 'asciidoctorj_ok 2.0.26' check/out.txt
 
 %files -f .mfiles
 %doc README.adoc
-%license LICENSE.txt LICENSE-asciidoctor.txt LICENSE-stringio.txt LICENSE-strscan.txt LICENSE-cgi.txt LICENSE-uri.txt LICENSE-logger.txt LICENSE-optparse.txt
+%license LICENSE.txt LICENSE-asciidoctor.txt LICENSE-stringio.txt LICENSE-strscan.txt LICENSE-uri.txt LICENSE-logger.txt LICENSE-optparse.txt
